@@ -1,4 +1,4 @@
-/* arch/arm/mach-msm/lge/board-gelato-mmc.c
+/* arch/arm/mach-msm/lge/board-alessi-mmc.c
  * Copyright (C) 2010 LGE Corporation.
  * Author: SungEun Kim <cleaneye.kim@lge.com>
  *
@@ -27,31 +27,26 @@
 #include <mach/vreg.h>
 #include <mach/mpp.h>
 #include <mach/board.h>
-#include <mach/board_lge.h>
-#include "board-gelato.h"
-
-#ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
-static unsigned sd_detect_gpio = 41;
-#endif
+#include "board-alessi.h"
 
 static void sdcc_gpio_init(void)
 {
 #ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
 	int rc = 0;
-	if (gpio_request(sd_detect_gpio, "sdc1_status_pin_irq"))
+	if (gpio_request(GPIO_SD_DETECT_N, "sdc1_status_pin_irq"))
 		pr_err("failed to request gpio sdc1_status_irq\n");
-	rc = gpio_tlmm_config(GPIO_CFG(sd_detect_gpio, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP,
+	rc = gpio_tlmm_config(GPIO_CFG(GPIO_SD_DETECT_N, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL,
 									GPIO_CFG_2MA), GPIO_CFG_ENABLE);
 	if (rc)
 		printk(KERN_ERR "%s: Failed to configure GPIO %d\n",
 					__func__, rc);
-	/* if (gpio_request(GPIO_MMC_COVER_DETECT, "sdc1_status_socket_irq")) */
-	/* 	pr_err("failed to request gpio sdc1_status_irq\n"); */
-	/* rc = gpio_tlmm_config(GPIO_CFG(GPIO_MMC_COVER_DETECT, 0, GPIO_INPUT, GPIO_PULL_UP, */
-	/* 							   GPIO_2MA), GPIO_ENABLE); */
-	/* if (rc) */
-	/* 	printk(KERN_ERR "%s: Failed to configure GPIO %d\n", */
-	/* 				__func__, rc); */
+	if (gpio_request(GPIO_MMC_COVER_DETECT, "sdc1_status_socket_irq"))
+		pr_err("failed to request gpio sdc1_status_irq\n");
+	rc = gpio_tlmm_config(GPIO_CFG(GPIO_MMC_COVER_DETECT, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP,
+								   GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+	if (rc)
+		printk(KERN_ERR "%s: Failed to configure GPIO %d\n",
+					__func__, rc);
 #endif
 	/* SDC1 GPIOs */
 #ifdef CONFIG_MMC_MSM_SDC1_SUPPORT
@@ -133,38 +128,16 @@ static void sdcc_gpio_init(void)
 #endif
 }
 
-/* LGE_CHANGE_S, [hyuncheol0.kim@lge.com] , 2011-02-10, for current consumption */
-static unsigned sdcc_no_mmc_sleep_cfg_data[6] = {
-	GPIO_CFG(GPIO_SD_DATA_3, 1, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_8MA),
-	GPIO_CFG(GPIO_SD_DATA_2, 1, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_8MA),
-	GPIO_CFG(GPIO_SD_DATA_1, 1, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_8MA),
-	GPIO_CFG(GPIO_SD_DATA_0, 1, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_8MA),
-	GPIO_CFG(GPIO_SD_CMD, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_8MA),
-	GPIO_CFG(GPIO_SD_CLK, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_8MA),
-};
-/* LGE_CHANGE_E, [hyuncheol0.kim@lge.com] , 2011-02-10, for current consumption */
-
 static unsigned sdcc_cfg_data[][6] = {
 	/* SDC1 configs */
 #ifdef  CONFIG_MMC_MSM_CARD_HW_DETECTION
 	{
-/* LGE_CHANGE_S, [hyuncheol0.kim@lge.com] , 2011-02-10, for current consumption */
-#if 1	// Original Code
 	GPIO_CFG(GPIO_SD_DATA_3, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
 	GPIO_CFG(GPIO_SD_DATA_2, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
 	GPIO_CFG(GPIO_SD_DATA_1, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
 	GPIO_CFG(GPIO_SD_DATA_0, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
 	GPIO_CFG(GPIO_SD_CMD, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
 	GPIO_CFG(GPIO_SD_CLK, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
-#else
-	GPIO_CFG(GPIO_SD_DATA_3, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
-	GPIO_CFG(GPIO_SD_DATA_2, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
-	GPIO_CFG(GPIO_SD_DATA_1, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
-	GPIO_CFG(GPIO_SD_DATA_0, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
-	GPIO_CFG(GPIO_SD_CMD, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
-	GPIO_CFG(GPIO_SD_CLK, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_8MA),
-#endif
-/* LGE_CHANGE_E, [hyuncheol0.kim@lge.com] , 2011-02-10, for current consumption */
 	},
 #else	
 	{
@@ -209,29 +182,6 @@ static unsigned long vreg_sts, gpio_sts;
 static unsigned mpp_mmc = 2;
 static struct vreg *vreg_mmc;
 
-/* LGE_CHANGE_S, [hyuncheol0.kim@lge.com] , 2011-02-10, for current consumption */
-static void msm_sdcc_setup_gpio_no_mmc(int dev_id, unsigned int enable)
-{
-	int i, rc;
-
-	if (!(test_bit(dev_id, &gpio_sts)^enable))
-		return;
-
-	if (enable)
-		set_bit(dev_id, &gpio_sts);
-	else
-		clear_bit(dev_id, &gpio_sts);
-
-	for (i = 0; i < ARRAY_SIZE(sdcc_no_mmc_sleep_cfg_data); i++) {
-		rc = gpio_tlmm_config(sdcc_no_mmc_sleep_cfg_data[i],
-			enable ? GPIO_CFG_ENABLE : GPIO_CFG_DISABLE);
-		if (rc)
-			printk(KERN_ERR "%s: gpio_tlmm_config(%#x)=%d\n",
-				__func__, sdcc_no_mmc_sleep_cfg_data[i], rc);
-	}
-}
-/* LGE_CHANGE_E, [hyuncheol0.kim@lge.com] , 2011-02-10, for current consumption */
-
 static void msm_sdcc_setup_gpio(int dev_id, unsigned int enable)
 {
 	int i, rc;
@@ -264,13 +214,6 @@ static uint32_t msm_sdcc_setup_power(struct device *dv, unsigned int vdd)
 	if (vdd == 0) {
 		if (!vreg_sts)
 			return 0;
-
-/* LGE_CHANGE_S, [hyuncheol0.kim@lge.com] , 2011-02-10, for current consumption */
-		if (pdev->id == 1)
-		{
-			msm_sdcc_setup_gpio_no_mmc(pdev->id, !!vdd);
-		}
-/* LGE_CHANGE_E, [hyuncheol0.kim@lge.com] , 2011-02-10, for current consumption */
 
 		clear_bit(pdev->id, &vreg_sts);
 
@@ -313,48 +256,41 @@ static uint32_t msm_sdcc_setup_power(struct device *dv, unsigned int vdd)
 }
 
 #ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
-static unsigned int gelato_sdcc_slot_status(struct device *dev)
+static unsigned int thunderg_sdcc_slot_status(struct device *dev)
 {
-	return !gpio_get_value(sd_detect_gpio);
+	return !(gpio_get_value(GPIO_MMC_COVER_DETECT)||gpio_get_value(GPIO_SD_DETECT_N));
 }
 #endif
 
-/* LGE_CHANGE_S, [jongpil.yoon@lge.com], 2011-01-07, <Add BCM4330> */
+/* LGE_CHANGE_S [jisung.yang@lge.com] 2010-04-24, BCM4325 control gpio */
 #if defined(CONFIG_LGE_BCM432X_PATCH)
 static unsigned int bcm432x_sdcc_wlan_slot_status(struct device *dev)
 {
-	printk(KERN_ERR "%s: %d %d\n", __func__, CONFIG_BCM4330_GPIO_WL_RESET, gpio_get_value(CONFIG_BCM4330_GPIO_WL_RESET));
-    return gpio_get_value(CONFIG_BCM4330_GPIO_WL_RESET);
+	printk(KERN_ERR "%s: %d %d\n", __func__, CONFIG_BCM4325_GPIO_WL_RESET, gpio_get_value(CONFIG_BCM4325_GPIO_WL_RESET));
+    return gpio_get_value(CONFIG_BCM4325_GPIO_WL_RESET);
 }
 
 static struct mmc_platform_data bcm432x_sdcc_wlan_data = {
     .ocr_mask   	= MMC_VDD_30_31,
 	.translate_vdd	= msm_sdcc_setup_power,
     .status     	= bcm432x_sdcc_wlan_slot_status,
-	.status_irq		= MSM_GPIO_TO_INT(CONFIG_BCM4330_GPIO_WL_RESET),
+	.status_irq		= MSM_GPIO_TO_INT(CONFIG_BCM4325_GPIO_WL_RESET),
     .irq_flags      = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
     .mmc_bus_width  = MMC_CAP_4_BIT_DATA,
-	// LGE_DEV_PORTING, 2011-02-22, jongpil.yoon@lge.com, <WiFi driver timeout issue>
-	.dummy52_required = 1,
-	// LGE_DEV_END, 2011-02-22, jongpil.yoon@lge.com, <WiFi driver timeout issue>
 	.msmsdcc_fmin	= 144000,
 	.msmsdcc_fmid	= 24576000,
-	//.msmsdcc_fmax	= 49152000,
-	.msmsdcc_fmax	= 24576000,
-	// LGE_CHANGE_S, [jongpil.yoon@lge.com], 2011-04-22, <do not remove the sd card when wifi turn off after patching QCT 7125>
-	//.nonremovable	= 1, /* <original> */
-	.nonremovable = 0,
-	// LGE_CHANGE_S, [jongpil.yoon@lge.com], 2011-04-22, <do not remove the sd card when wifi turn off after patching QCT 7125>
+	.msmsdcc_fmax	= 49152000,
+	.nonremovable	= 0,
 };
 #endif  /* CONFIG_LGE_BCM432X_PATCH*/
-/* LGE_CHANGE_E, [jongpil.yoon@lge.com], 2011-01-07, <Add BCM4330> */
+/* LGE_CHANGE_E [jisung.yang@lge.com] 2010-04-24, BCM4325 control gpio */
 
 static struct mmc_platform_data msm7x2x_sdc1_data = {
 #ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
 	.ocr_mask		= MMC_VDD_30_31,
 	.translate_vdd	= msm_sdcc_setup_power,
-	.status 		= gelato_sdcc_slot_status,
-	.status_irq 	= MSM_GPIO_TO_INT(GPIO_SD_DETECT_N),
+	.status 		= thunderg_sdcc_slot_status,
+	.status_irq 	= MSM_GPIO_TO_INT(GPIO_MMC_COVER_DETECT),
 	.irq_flags		= IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
 	.mmc_bus_width	= MMC_CAP_4_BIT_DATA,
 #else
@@ -366,15 +302,16 @@ static struct mmc_platform_data msm7x2x_sdc1_data = {
 	.msmsdcc_fmid	= 24576000,
 	.msmsdcc_fmax	= 49152000,
 	.nonremovable	= 0,
-#ifdef CONFIG_MMC_MSM_SDC1_DUMMY52_REQUIRED
-	.dummy52_required = 1,
-#endif
 };
 
 static void __init msm7x2x_init_mmc(void)
 {
 	if (!machine_is_msm7x25_ffa() && !machine_is_msm7x27_ffa()) {
-		vreg_mmc = vreg_get(NULL, "wlan");
+#ifdef CONFIG_MACH_MSM7X27_ELINI 
+		vreg_mmc = vreg_get(NULL, "mmc");
+#else
+		vreg_mmc = vreg_get(NULL, "gp6");
+#endif
 		if (IS_ERR(vreg_mmc)) {
 			printk(KERN_ERR "%s: vreg get failed (%ld)\n",
 			       __func__, PTR_ERR(vreg_mmc));
@@ -387,27 +324,31 @@ static void __init msm7x2x_init_mmc(void)
 	msm_add_sdcc(1, &msm7x2x_sdc1_data);
 #endif	
 #ifdef CONFIG_MMC_MSM_SDC2_SUPPORT
-
 /* LGE_CHANGE_S [jisung.yang@lge.com] 2010-04-24, BCM4325 control */
 #if defined(CONFIG_LGE_BCM432X_PATCH)
-
 	/* GPIO config */
-/* LGE_CHANGE_S, [jongpil.yoon@lge.com], 2011-01-07, <Add BCM4330> */
-	/*gpio_tlmm_config(GPIO_CFG(CONFIG_BCM4330_GPIO_WL_RESET, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
-	gpio_set_value(CONFIG_BCM4330_GPIO_WL_RESET, 0);
+	gpio_tlmm_config(GPIO_CFG(CONFIG_BCM4325_GPIO_WL_REGON, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+	gpio_set_value(CONFIG_BCM4325_GPIO_WL_REGON, 1);
 	
-	gpio_tlmm_config(GPIO_CFG(CONFIG_BCM4330_GPIO_WL_HOSTWAKEUP, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA), GPIO_CFG_ENABLE);*/
+	gpio_tlmm_config(GPIO_CFG(CONFIG_BCM4325_GPIO_WL_RESET, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+	gpio_set_value(CONFIG_BCM4325_GPIO_WL_RESET, 0);
+	
+	mdelay(100);
+
+	// LGE_UPDATE_S dk.moon 2010-06-23 workaround solution about power consumption problem (BCM4325)
+	gpio_set_value(CONFIG_BCM4325_GPIO_WL_REGON, 0);
+	// LGE_UPDATE_E dk.moon 2010-06-23 
+
+	// E720_ALESSI LGE_UPDATE_S dk.moon 2010-08-07 CONFIG_BCM4325_GPIO_WL_HOSTWAKEUP low setting.
+	gpio_tlmm_config(GPIO_CFG(CONFIG_BCM4325_GPIO_WL_HOSTWAKEUP, 0, GPIO_CFG_INPUT/*GPIO_OUTPUT*/, GPIO_CFG_PULL_DOWN/*GPIO_PULL_UP*/, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
+	// E720_ALESSI LGE_UPDATE_E dk.moon 2010-08-07 
 
 	/* Register platform device */
     msm_add_sdcc(2, &bcm432x_sdcc_wlan_data);
 
 	/* Enable RESET IRQ for wlan card detect */
-	/*enable_irq(gpio_to_irq(CONFIG_BCM4330_GPIO_WL_RESET));*/
-/* LGE_CHANGE_E, [jongpil.yoon@lge.com], 2011-01-07, <Add BCM4330> */
-#else /* qualcomm or google */
-    msm_add_sdcc(2, &msm7x2x_sdc1_data);
-#endif /* CONFIG_LGE_BCM432X_PATCH */
-/* LGE_CHANGE_E [jisung.yang@lge.com] 2010-04-24, BCM4325 control */
+	enable_irq(gpio_to_irq(CONFIG_BCM4325_GPIO_WL_RESET));
+#endif
 }
 #else
 #define msm7x2x_init_mmc() do {} while (0)

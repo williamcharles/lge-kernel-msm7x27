@@ -57,9 +57,8 @@
 #include <linux/i2c.h>
 #include <linux/android_pmem.h>
 #include <mach/camera.h>
-
-#include "devices.h"
 #include <mach/socinfo.h>
+#include "devices.h"
 #include "clock.h"
 #include "msm-keypad-devices.h"
 #include "pm.h"
@@ -70,23 +69,7 @@
 #include <linux/usb/android_composite.h>
 #endif
 #include <mach/board_lge.h>
-#include "board-univa.h"
-
-
-
-//LGE_DEV_PORTING UNIVA_S MDP Setting jonghyuck.shin@lge.com 20110425
- /* decrease MDP pmem size in case of gpu and ashmem.
- * this should be synch. with android display framework.
- * 2011-04-11, jinkyu.choi@lge.com
- */
-//--------------------------------------------------
-// [GPU SETTING]
-//unsigned pmem_mdp_size = 0x5A0000; <- 주석 아님.
-// [MDP SETTING]
-// unsigned pmem_mdp_size = 0x5A0000; <- 주석.
-//--------------------------------------------------
-//unsigned pmem_mdp_size = 0x5A0000;
-//LGE_DEV_PORTING UNIVA_E
+#include "board-alessi.h"
 
 /* board-specific pm tuning data definitions */
 
@@ -128,7 +111,7 @@ struct msm_pm_platform_data msm7x27_pm_data[MSM_PM_SLEEP_MODE_NR] = {
 /* LGE_CHANGE
  * Currently, LG Android host driver has 2 USB bind orders as following;
  * - Android Platform : MDM + DIAG + GPS + UMS + ADB
- * - Android Net      : DIAG + NDIS + MDM + GPS + UMS
+ * - Android Net	  : DIAG + NDIS + MDM + GPS + UMS
  *
  * To bind LG AndroidNet, we add ACM function named "acm2".
  * Please refer to drivers/usb/gadget/f_acm.c.
@@ -163,9 +146,6 @@ char *usb_functions_lge_all[] = {
 	"usb_mass_storage",
 	"adb",
 };
-
-
-
 
 
 /* LG Android Platform */
@@ -262,13 +242,13 @@ struct android_usb_product usb_products[] = {
 #ifdef CONFIG_USB_ANDROID_RNDIS
 	{
 		.product_id = 0x61DA,
-		.num_functions = ARRAY_SIZE(usb_functions_lge_android_rndis),
-		.functions = usb_functions_lge_android_rndis,
+		.num_functions  = ARRAY_SIZE(usb_functions_lge_android_rndis),
+		.functions  = usb_functions_lge_android_rndis,
 	},
 	{
 		.product_id = 0x61D9,
-		.num_functions = ARRAY_SIZE(usb_functions_lge_android_rndis_adb),
-		.functions = usb_functions_lge_android_rndis_adb,
+		.num_functions  = ARRAY_SIZE(usb_functions_lge_android_rndis_adb),
+		.functions  = usb_functions_lge_android_rndis_adb,
 	},
 #endif
 #ifdef CONFIG_USB_ANDROID_MTP
@@ -288,8 +268,8 @@ struct android_usb_product usb_products[] = {
 #endif
 	{
 		.product_id = 0x6000,
-		.num_functions = ARRAY_SIZE(usb_functions_lge_manufacturing),
-		.functions = usb_functions_lge_manufacturing,
+		.num_functions  = ARRAY_SIZE(usb_functions_lge_manufacturing),
+		.functions  = usb_functions_lge_manufacturing,
 	},
 	{
 		.product_id = 0x61C5,
@@ -411,13 +391,13 @@ struct android_usb_platform_data android_usb_pdata = {
 	.vendor_id  = 0x1004,
 	.product_id = 0x618E,
 	.version    = 0x0100,
-	.product_name       = "LGE Android Phone",
+	.product_name       = "LGE Android Device",
 	.manufacturer_name  = "LG Electronics Inc.",
 	.num_products = ARRAY_SIZE(usb_products),
 	.products = usb_products,
 	.num_functions = ARRAY_SIZE(usb_functions_lge_all),
 	.functions = usb_functions_lge_all,
-	.serial_number = "LG_ANDROID_E510_GB_",
+	.serial_number = "LG_ANDROID_E720_GB_",
 };
 
 static int __init board_serialno_setup(char *serialno)
@@ -482,17 +462,12 @@ static void msm7x27_wlan_init(void)
 	}
 }
 
-/* decrease FB pmem size because univa uses hvga
+/* decrease FB pmem size because thunderg uses hvga
  * qualcomm's original value depends on wvga resolution
  * 2010-04-18, cleaneye.kim@lge.com
  */
 unsigned pmem_fb_size = 	0x96000;
-
-/* Increase aDSP pmem size because univa uses 5M camera sensor
- * (For CTS testPreviewPictureSizesCombination)
- * 2011-07-06, taiyou.kang@lge.com
- */
-unsigned pmem_adsp_size = 0xBE4000; //0xAE4000
+unsigned pmem_adsp_size =	0xAE4000;
 
 static void __init msm7x2x_init(void)
 {
@@ -513,12 +488,10 @@ static void __init msm7x2x_init(void)
 
 	msm_add_pmem_devices();
 	msm_add_fb_device();
-
 #if !defined(CONFIG_MSM_SERIAL_DEBUGGER)
 	if (lge_get_uart_mode())
 		platform_device_register(&msm_device_uart3);
 #endif
-
 	platform_add_devices(devices, ARRAY_SIZE(devices));
 #ifdef CONFIG_ARCH_MSM7X27
 	msm_add_kgsl_device();
@@ -551,7 +524,7 @@ static void __init msm7x2x_init(void)
 	lge_add_input_devices();
 	lge_add_misc_devices();
 	lge_add_pm_devices();
-	
+
 	/* gpio i2c devices should be registered at latest point */
 	lge_add_gpio_i2c_devices();
 }
@@ -571,7 +544,7 @@ static void __init msm7x2x_map_io(void)
 #endif
 }
 
-MACHINE_START(MSM7X27_UNIVA, "UNIVA Global board (LGE LG-E510)")
+MACHINE_START(MSM7X27_ALESSI, "ALESSI Global board (LGE E720)")
 #ifdef CONFIG_MSM_DEBUG_UART
 	.phys_io        = MSM_DEBUG_UART_PHYS,
 	.io_pg_offst    = ((MSM_DEBUG_UART_BASE) >> 18) & 0xfffc,
